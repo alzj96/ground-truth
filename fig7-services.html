@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>服务业占比 · 同一场冲击，落在不同结构上</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;color:#1d1d1f;line-height:1.5;padding:0;}
+  .fig{max-width:920px;margin:0 auto;background:#fff;border:none;border-radius:0;padding:0;box-shadow:none;}
+  .eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.4px;color:#0066cc;margin-bottom:8px;}
+  h1{font-size:17px;font-weight:700;letter-spacing:-.2px;margin-bottom:5px;}
+  .thesis{font-size:12.5px;color:#424245;max-width:780px;margin-bottom:4px;}
+  .thesis b{color:#1d1d1f;}
+  svg{display:block;width:100%;height:auto;margin:0 0 2px;}
+  .gl{stroke:#ededf0;stroke-width:1;}
+  .axis{stroke:#c7c7cc;stroke-width:1;}
+  .axlabel{font-size:11px;fill:#86868b;}
+  .note{font-size:11px;color:#86868b;margin-top:10px;padding-top:10px;border-top:1px solid #ededf0;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="fig">
+  <svg id="chart" viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif"></svg>
+
+  <div style="font-size:10.5px;color:#86868b;line-height:1.55;margin-top:7px;">数据来源：World Bank / ILO（约 2024 年）。</div>
+  <div style="font-size:12px;color:#1d1d1f;line-height:1.55;margin-top:4px;">图 7：服务业占就业比重——美国约八成、OECD 多数 70% 以上、中国约 48%；同一场冲击落在不同经济结构上，社会震级不同。</div>
+</div>
+<script>
+(function(){
+  const data = [
+    { label: "美国",           value: 79, note: null },
+    { label: "OECD 多数经济体", value: 72, note: "70%+" },
+    { label: "中国",           value: 48, note: "制造业纵深更大、操作层更厚" }
+  ];
+
+  const VW = 760, VH = 420;
+  const marginLeft = 148, marginRight = 32, marginTop = 40, marginBottom = 48;
+  const chartW = VW - marginLeft - marginRight;
+  const chartH = VH - marginTop - marginBottom;
+
+  const xMin = 0, xMax = 100;
+  function xScale(v){ return marginLeft + (v - xMin) / (xMax - xMin) * chartW; }
+
+  const barCount = data.length;
+  const barGap = 22;
+  const totalBarHeight = chartH - (barCount - 1) * barGap;
+  const barH = Math.floor(totalBarHeight / barCount);
+  const blockH = barH + barGap;
+
+  function yBar(i){ return marginTop + i * blockH; }
+
+  const xTicks = [0, 20, 40, 60, 80, 100];
+
+  let els = [];
+
+  // grid lines
+  xTicks.forEach(t => {
+    const x = xScale(t);
+    els.push(`<line class="gl" x1="${x}" y1="${marginTop}" x2="${x}" y2="${marginTop + chartH}"/>`);
+  });
+
+  // x axis
+  els.push(`<line class="axis" x1="${xScale(0)}" y1="${marginTop + chartH}" x2="${xScale(100)}" y2="${marginTop + chartH}"/>`);
+
+  // x tick labels
+  xTicks.forEach(t => {
+    const x = xScale(t);
+    els.push(`<text class="axlabel" x="${x}" y="${marginTop + chartH + 18}" text-anchor="middle">${t}%</text>`);
+  });
+
+  // x axis title
+  els.push(`<text class="axlabel" x="${VW / 2}" y="${VH - 4}" text-anchor="middle">服务业占总就业比重（%）</text>`);
+
+  // bars
+  data.forEach((d, i) => {
+    const y = yBar(i);
+    const bw = xScale(d.value) - xScale(0);
+    const barColor = i === data.length - 1 ? "#5b9bd5" : "#0066cc";
+    const labelX = xScale(0) - 10;
+    const midY = y + barH / 2;
+
+    // country label
+    els.push(`<text font-size="14" font-weight="600" fill="#1d1d1f" x="${labelX}" y="${midY + 5}" text-anchor="end">${d.label}</text>`);
+
+    // bar
+    els.push(`<rect x="${xScale(0)}" y="${y}" width="${bw}" height="${barH}" fill="${barColor}" rx="2"/>`);
+
+    // value label at end of bar
+    const displayVal = d.note && d.note.endsWith("+") ? d.note : `${d.value}%`;
+    const valX = xScale(d.value) + 8;
+    els.push(`<text font-size="13.5" font-weight="700" fill="${barColor}" x="${valX}" y="${midY + 5}" text-anchor="start">${displayVal}</text>`);
+
+    // annotation note for China
+    if (d.note && !d.note.endsWith("+")) {
+      els.push(`<text font-size="11" fill="#86868b" x="${valX}" y="${midY + 20}" text-anchor="start">${d.note}</text>`);
+    }
+  });
+
+  document.getElementById("chart").innerHTML = els.join("\n");
+})();
+</script>
+<script>(function(){var m=(location.hash.match(/n=(\d+)/)||[])[1];function s(){var el=document.querySelector(".fig")||document.body;try{parent.postMessage({__figN:m,__figH:Math.ceil(el.getBoundingClientRect().height)+6},"*");}catch(e){}}addEventListener("load",s);try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.querySelector(".fig")||document.body);}catch(e){}[120,400,1000,2200].forEach(function(t){setTimeout(s,t);});})();</script>
+</body>
+</html>

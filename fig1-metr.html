@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>METR 时长曲线 · 三年，从 5 分钟到 16 小时以上</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;color:#1d1d1f;line-height:1.5;padding:0;}
+  .fig{max-width:920px;margin:0 auto;background:#fff;border:none;border-radius:0;padding:0;box-shadow:none;}
+  .eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.4px;color:#0066cc;margin-bottom:8px;}
+  h1{font-size:17px;font-weight:700;letter-spacing:-.2px;margin-bottom:5px;}
+  .thesis{font-size:12.5px;color:#424245;max-width:780px;margin-bottom:4px;}
+  .thesis b{color:#1d1d1f;}
+  svg{display:block;width:100%;height:auto;margin:0 0 2px;}
+  .gl{stroke:#ededf0;stroke-width:1;}
+  .axis{stroke:#c7c7cc;stroke-width:1;}
+  .axlabel{font-size:11px;fill:#86868b;}
+  .yref{font-size:10.5px;fill:#aeaeb2;}
+  .src{font-size:10.5px;color:#86868b;margin-top:14px;padding-top:12px;border-top:1px solid #ededf0;line-height:1.6;}
+  .src b{color:#6e6e73;}
+</style>
+</head>
+<body>
+<div class="fig">
+  <svg id="chart" viewBox="0 0 760 460" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif"></svg>
+  <div style="font-size:10.5px;color:#86868b;line-height:1.55;margin-top:7px;">数据来源：METR《Measuring AI Ability to Complete Long Tasks》(2025-03) 及 Time Horizon 1.1 (2026-01-29)，50% 成功率口径。GPT-4 ≈5 分（2023年初）；Claude 3.7 Sonnet ≈55 分（2025-02）；o3 ≈120 分（2025-06）；GPT-5 ≈210 分（2025-07）；Claude Opus 4.5 ≈289 分（2025-12）；Mythos ≥960 分（2026-05，已超现有任务集可靠测量上限）。最后一段用虚线表示"≥/超上限"。metr.org/time-horizons</div>
+  <div style="font-size:12px;color:#1d1d1f;line-height:1.55;margin-top:4px;">图 1：AI 能自主完成的任务时长（以人类专家耗时衡量，50% 成功率口径），纵轴对数——每 4–7 个月翻一倍，三年从 5 分钟到 16 小时以上。</div>
+</div>
+<script>
+(function(){
+  const W = 760, H = 460;
+  const L = 88, R = 740, T = 30, B = 420;
+  const plotW = R - L, plotH = B - T;
+
+  // x: year decimal [2023, 2026.6]
+  const xMin = 2023.0, xMax = 2026.7;
+  function x(v){ return L + (v - xMin) / (xMax - xMin) * plotW; }
+
+  // y: log scale in minutes, range [log(3), log(1440)]
+  // ticks: 5min, 15min, 60min(1h), 240min(4h), 960min(16h)
+  const yLogMin = Math.log(3), yLogMax = Math.log(1500);
+  function y(v){ return B - (Math.log(v) - yLogMin) / (yLogMax - yLogMin) * plotH; }
+
+  const data = [
+    { xv: 2023.2,  yv: 5,   label: "GPT-4",                 labelAnchor: "start",  labelDx: 9,  labelDy: 18 },
+    { xv: 2025.15, yv: 55,  label: "Claude 3.7 Sonnet",     labelAnchor: "start",  labelDx: 9,  labelDy: 18 },
+    { xv: 2025.45, yv: 120, label: "o3",                    labelAnchor: "end",    labelDx: -9, labelDy: -16 },
+    { xv: 2025.6,  yv: 210, label: "GPT-5",                 labelAnchor: "start",  labelDx: 9,  labelDy: 18 },
+    { xv: 2025.95, yv: 289, label: "Claude Opus 4.5\n（4时49分）", labelAnchor: "end", labelDx: -9, labelDy: -10 },
+    { xv: 2026.4,  yv: 960, label: "Mythos",                labelAnchor: "end",    labelDx: -9, labelDy: 18 },
+  ];
+
+  const LAST_SOLID = 4; // index of last solid point (Opus 4.5)
+
+  // grid ticks
+  const yTicks = [
+    { v: 5,   label: "5 分" },
+    { v: 15,  label: "15 分" },
+    { v: 60,  label: "1 时" },
+    { v: 240, label: "4 时" },
+    { v: 960, label: "16 时" },
+  ];
+
+  const xTicks = [2023, 2024, 2025, 2026];
+
+  let svg = '';
+
+  // gridlines + y labels
+  for (const t of yTicks){
+    const yy = y(t.v);
+    svg += `<line class="gl" x1="${L}" y1="${yy.toFixed(1)}" x2="${R}" y2="${yy.toFixed(1)}"/>`;
+    svg += `<text class="yref" x="${L-6}" y="${(yy+3.5).toFixed(1)}" text-anchor="end">${t.label}</text>`;
+  }
+
+  // axes
+  svg += `<line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${B}"/>`;
+  svg += `<line class="axis" x1="${L}" y1="${B}" x2="${R}" y2="${B}"/>`;
+
+  // x tick labels
+  for (const xv of xTicks){
+    const xx = x(xv);
+    svg += `<text class="axlabel" x="${xx.toFixed(1)}" y="${(B+16).toFixed(1)}" text-anchor="middle">${xv}</text>`;
+  }
+
+  // axis title（单行）
+  svg += `<text class="axlabel" x="${L}" y="${T-10}" text-anchor="start">分钟（对数）</text>`;
+
+  // compute point coords
+  const pts = data.map(d => ({ ...d, cx: x(d.xv), cy: y(d.yv) }));
+
+  // solid polyline (all except last segment)
+  const solidPts = pts.slice(0, LAST_SOLID + 1).map(p => `${p.cx.toFixed(1)},${p.cy.toFixed(1)}`).join(' ');
+  svg += `<polyline points="${solidPts}" fill="none" stroke="#0066cc" stroke-width="2.5" stroke-linejoin="round"/>`;
+
+  // dashed polyline for last segment (Opus 4.5 → Mythos)
+  const p5 = pts[LAST_SOLID], p6 = pts[LAST_SOLID + 1];
+  svg += `<line x1="${p5.cx.toFixed(1)}" y1="${p5.cy.toFixed(1)}" x2="${p6.cx.toFixed(1)}" y2="${p6.cy.toFixed(1)}" fill="none" stroke="#0066cc" stroke-width="2" stroke-dasharray="5 5" opacity=".8"/>`;
+
+  // dots
+  for (let i = 0; i < pts.length; i++){
+    const p = pts[i];
+    const r = (i === pts.length - 1) ? 5 : 4;
+    const extra = (i === pts.length - 1) ? ' stroke="#fff" stroke-width="1.5"' : '';
+    svg += `<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${r}" fill="#0066cc"${extra}/>`;
+  }
+
+  // labels
+  for (let i = 0; i < pts.length; i++){
+    const p = pts[i];
+    const lines = p.label.split('\n');
+    if (i === pts.length - 1){
+      // Mythos: label above, with "≥16时·已超上限" on second line
+      svg += `<text font-size="11.5" font-weight="600" fill="#0066cc" text-anchor="${p.labelAnchor}" x="${(p.cx + p.labelDx).toFixed(1)}" y="${(p.cy + p.labelDy).toFixed(1)}">${lines[0]}</text>`;
+      svg += `<text font-size="10.5" font-weight="600" fill="#0066cc" text-anchor="${p.labelAnchor}" x="${(p.cx + p.labelDx).toFixed(1)}" y="${(p.cy + p.labelDy + 14).toFixed(1)}">（≥16 时）</text>`;
+      svg += `<text font-size="10" fill="#86868b" text-anchor="${p.labelAnchor}" x="${(p.cx + p.labelDx).toFixed(1)}" y="${(p.cy + p.labelDy + 27).toFixed(1)}">已超现有任务集可靠测量上限</text>`;
+    } else if (lines.length > 1){
+      // multi-line (Opus 4.5)
+      svg += `<text font-size="11.5" font-weight="600" fill="#0066cc" text-anchor="${p.labelAnchor}" x="${(p.cx + p.labelDx).toFixed(1)}" y="${(p.cy + p.labelDy).toFixed(1)}">${lines[0]}</text>`;
+      svg += `<text font-size="11.5" font-weight="600" fill="#0066cc" text-anchor="${p.labelAnchor}" x="${(p.cx + p.labelDx).toFixed(1)}" y="${(p.cy + p.labelDy + 14).toFixed(1)}">${lines[1]}</text>`;
+    } else {
+      svg += `<text font-size="11.5" font-weight="600" fill="#0066cc" text-anchor="${p.labelAnchor}" x="${(p.cx + p.labelDx).toFixed(1)}" y="${(p.cy + p.labelDy).toFixed(1)}">${p.label}</text>`;
+    }
+  }
+
+  // annotation: "≈每 4–7 个月翻一倍"
+  // Place mid-chart around x=2024.5, y=30min area
+  const annX = x(2024.3), annY = y(30);
+  svg += `<text font-size="11" fill="#6e6e73" text-anchor="start" x="${annX.toFixed(1)}" y="${(annY - 10).toFixed(1)}">≈ 每 4–7 个月翻一倍</text>`;
+  // small arrow-ish indicator line along trend
+  const trendX1 = x(2024.0), trendY1 = y(18), trendX2 = x(2024.7), trendY2 = y(60);
+  svg += `<line x1="${trendX1.toFixed(1)}" y1="${trendY1.toFixed(1)}" x2="${trendX2.toFixed(1)}" y2="${trendY2.toFixed(1)}" stroke="#6e6e73" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>`;
+
+  document.getElementById('chart').innerHTML = svg;
+})();
+</script>
+</div>
+<script>(function(){var m=(location.hash.match(/n=(\d+)/)||[])[1];function s(){var el=document.querySelector(".fig")||document.body;try{parent.postMessage({__figN:m,__figH:Math.ceil(el.getBoundingClientRect().height)+6},"*");}catch(e){}}addEventListener("load",s);try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.querySelector(".fig")||document.body);}catch(e){}[120,400,1000,2200].forEach(function(t){setTimeout(s,t);});})();</script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行业重定价矩阵 · 冲击何时到 × 冲击有多深</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;color:#1d1d1f;line-height:1.5;padding:0;}
+  .fig{max-width:920px;margin:0 auto;background:#fff;border:none;border-radius:0;padding:0;box-shadow:none;}
+  .eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.4px;color:#0066cc;margin-bottom:8px;}
+  h1{font-size:17px;font-weight:700;letter-spacing:-.2px;margin-bottom:5px;}
+  .thesis{font-size:12.5px;color:#424245;max-width:780px;margin-bottom:4px;}
+  .thesis b{color:#1d1d1f;}
+  svg{display:block;width:100%;height:auto;margin:0 0 2px;}
+  .gl{stroke:#ededf0;stroke-width:1;}
+  .axis{stroke:#c7c7cc;stroke-width:1;}
+  .axlabel{font-size:11px;fill:#86868b;}
+  .note{font-size:11.5px;color:#86868b;margin-top:6px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="fig">
+  <svg id="chart" viewBox="0 0 760 520" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif"></svg>
+
+  <div style="font-size:10.5px;color:#86868b;line-height:1.55;margin-top:7px;">说明：位置为示意（由认知层厚度、物理／数据壁垒、监管壁垒共同决定）；监管壁垒会把若干行业整体右移。</div>
+  <div style="font-size:12px;color:#1d1d1f;line-height:1.55;margin-top:4px;">图 8：行业重定价矩阵——横轴"冲击何时到"、纵轴"冲击有多深"；认知层越厚、壁垒越薄越靠左上，越依赖物理与默会越靠右下。</div>
+</div>
+
+<script>
+(function(){
+  const industries = [
+    // x,y = data coords; lx,ly = label anchor pixel offsets from dot; anchor = text-anchor
+    // All positions manually verified for zero overlap
+    // dot: (133.6, 86.6)  → label below-right; "法律文书"上方 loy=-10 → rows differ
+    { label: "软件 / 编码",                     x: 1,   y: 9,   lox:  10, loy:  14,  anchor: "start",  size: 11 },
+    // dot: (166.4, 167.8) → label left to avoid overlap with #5 below
+    { label: "客服",                             x: 1.5, y: 7,   lox: -10, loy:  4,   anchor: "end",    size: 11 },
+    // dot: (232, 86.6)    → label above to avoid #4 at (264.8,106.9) right-side
+    { label: "法律文书 / 律所",                 x: 2.5, y: 9,   lox:  0,  loy: -10,  anchor: "middle", size: 11 },
+    // dot: (264.8, 106.9) → label right; clear of #3 above and #5 below-left
+    { label: "会计 / 审计",                     x: 3,   y: 8.5, lox:  10, loy:  4,   anchor: "start",  size: 11 },
+    // dot: (232, 127.2)   → label left to avoid #4 right-label and #3 above
+    { label: "金融 / 投研数据",                 x: 2.5, y: 8,   lox: -10, loy:  4,   anchor: "end",    size: 11 },
+    // dot: (330.4, 167.8) → two-line label below; split at "（"
+    { label: "制造业认知层（研发·排产·质检）",  x: 4,   y: 7,   lox:  0,  loy:  14,  anchor: "middle", size: 11, wrap: true },
+    // dot: (363.2, 208.4) → label right
+    { label: "教育",                             x: 4.5, y: 6,   lox:  10, loy:  4,   anchor: "start",  size: 11 },
+    // dot: (396, 147.5)   → two-line label right; split at "（"
+    { label: "医疗（诊断·文书）",               x: 5,   y: 7.5, lox:  10, loy: -3,   anchor: "start",  size: 11, wrap: true },
+    // dot: (559.6, 309.9) → label above to give room; clear of #10
+    { label: "维修 / 安装",                     x: 7.5, y: 3.5, lox:  0,  loy: -10,  anchor: "middle", size: 11 },
+    // dot: (625.6, 330.2) → label below; clear of #11 at (658.4,309.9)
+    { label: "建筑施工",                         x: 8.5, y: 3,   lox:  0,  loy:  18,  anchor: "middle", size: 11 },
+    // dot: (658.4, 309.9) → label right; clear of #9 above-center and #10 below
+    { label: "护理 / 养老",                     x: 9,   y: 3.5, lox:  10, loy:  4,   anchor: "start",  size: 11 },
+  ];
+
+  // Canvas layout
+  const PAD_L = 68, PAD_R = 36, PAD_T = 46, PAD_B = 68;
+  const W = 760, H = 520;
+  const plotW = W - PAD_L - PAD_R;
+  const plotH = H - PAD_T - PAD_B;
+
+  // Scale: data 0–10 → canvas coords
+  function sx(v){ return PAD_L + (v / 10) * plotW; }
+  function sy(v){ return PAD_T + ((10 - v) / 10) * plotH; }
+
+  const parts = [];
+
+  // ---------- diagonal gradient zone ----------
+  parts.push(`<defs>
+    <linearGradient id="zonGrad" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#0066cc" stop-opacity="0.055"/>
+      <stop offset="50%"  stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#b5654a" stop-opacity="0.04"/>
+    </linearGradient>
+  </defs>`);
+  parts.push(`<rect x="${PAD_L}" y="${PAD_T}" width="${plotW}" height="${plotH}" fill="url(#zonGrad)"/>`);
+
+  // ---------- grid lines ----------
+  for(let i = 0; i <= 10; i++){
+    const px = sx(i), py = sy(i);
+    parts.push(`<line class="gl" x1="${px}" y1="${PAD_T}" x2="${px}" y2="${PAD_T + plotH}"/>`);
+    parts.push(`<line class="gl" x1="${PAD_L}" y1="${py}" x2="${PAD_L + plotW}" y2="${py}"/>`);
+  }
+
+  // ---------- axes ----------
+  parts.push(`<line class="axis" x1="${PAD_L}" y1="${PAD_T}" x2="${PAD_L}" y2="${PAD_T + plotH}"/>`);
+  parts.push(`<line class="axis" x1="${PAD_L}" y1="${PAD_T + plotH}" x2="${PAD_L + plotW}" y2="${PAD_T + plotH}"/>`);
+
+  // ---------- axis labels ----------
+  const xMid = PAD_L + plotW / 2;
+  const yBot = PAD_T + plotH;
+  parts.push(`<text class="axlabel" x="${xMid}" y="${yBot + 28}" text-anchor="middle">冲击到达时间</text>`);
+  parts.push(`<text class="axlabel" x="${PAD_L}" y="${yBot + 44}" text-anchor="middle" font-weight="600" fill="#0066cc" font-size="12">早</text>`);
+  parts.push(`<text class="axlabel" x="${PAD_L + plotW}" y="${yBot + 44}" text-anchor="middle" font-weight="600" fill="#86868b" font-size="12">晚</text>`);
+
+  // Y axis
+  const yMid = PAD_T + plotH / 2;
+  parts.push(`<text class="axlabel" x="${PAD_L - 14}" y="${yMid}" text-anchor="middle" transform="rotate(-90, ${PAD_L - 14}, ${yMid})">冲击深度</text>`);
+  parts.push(`<text class="axlabel" x="${PAD_L - 10}" y="${PAD_T + plotH}" text-anchor="middle" font-weight="600" fill="#86868b" font-size="12">浅</text>`);
+  parts.push(`<text class="axlabel" x="${PAD_L - 10}" y="${PAD_T + 8}" text-anchor="middle" font-weight="600" fill="#0066cc" font-size="12">深</text>`);
+
+  // ---------- corner annotations ----------
+  // Placed well inside corners, clear of all dot clusters
+  parts.push(`<text font-size="13" font-weight="600" fill="#0066cc" opacity="0.5" x="${PAD_L + 8}" y="${PAD_T + 22}" text-anchor="start">认知层</text>`);
+  parts.push(`<text font-size="13" font-weight="600" fill="#b5654a" opacity="0.5" x="${PAD_L + plotW - 8}" y="${PAD_T + plotH - 8}" text-anchor="end">物理层 / 默会</text>`);
+
+  // ---------- dots + labels ----------
+  industries.forEach(d => {
+    const cx = sx(d.x), cy = sy(d.y);
+    const lx = cx + d.lox;
+    const ly = cy + d.loy;
+
+    parts.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="5.5" fill="#0066cc" stroke="#fff" stroke-width="1.5"/>`);
+
+    if(d.wrap && d.label.includes("（")){
+      const [main, rest] = d.label.split("（");
+      const sub = "（" + rest;
+      // first line at ly, second at ly+13
+      parts.push(`<text font-size="${d.size}" fill="#1d1d1f" font-weight="600" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${d.anchor}">${main}</text>`);
+      parts.push(`<text font-size="10" fill="#424245" x="${lx.toFixed(1)}" y="${(ly + 13).toFixed(1)}" text-anchor="${d.anchor}">${sub}</text>`);
+    } else {
+      parts.push(`<text font-size="${d.size}" fill="#1d1d1f" font-weight="600" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${d.anchor}">${d.label}</text>`);
+    }
+  });
+
+  document.getElementById("chart").innerHTML = parts.join("\n");
+})();
+</script>
+<script>(function(){var m=(location.hash.match(/n=(\d+)/)||[])[1];function s(){var el=document.querySelector(".fig")||document.body;try{parent.postMessage({__figN:m,__figH:Math.ceil(el.getBoundingClientRect().height)+6},"*");}catch(e){}}addEventListener("load",s);try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.querySelector(".fig")||document.body);}catch(e){}[120,400,1000,2200].forEach(function(t){setTimeout(s,t);});})();</script>
+</body>
+</html>

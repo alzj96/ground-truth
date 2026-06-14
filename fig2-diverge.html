@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>两条发散的曲线 · 比特挣脱，原子贴地</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;color:#1d1d1f;line-height:1.5;padding:0;}
+  .fig{max-width:920px;margin:0 auto;background:#fff;border:none;border-radius:0;padding:0;box-shadow:none;}
+  .eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.4px;color:#0066cc;margin-bottom:8px;}
+  h1{font-size:17px;font-weight:700;letter-spacing:-.2px;margin-bottom:5px;}
+  .thesis{font-size:12.5px;color:#424245;max-width:780px;margin-bottom:4px;}
+  .thesis b{color:#1d1d1f;}
+  svg{display:block;width:100%;height:auto;margin:0 0 2px;}
+  .gl{stroke:#ededf0;stroke-width:1;}
+  .axis{stroke:#c7c7cc;stroke-width:1;}
+  .axlabel{font-size:11px;fill:#86868b;}
+  .yref{font-size:10.5px;fill:#aeaeb2;}
+  .bit{fill:none;stroke:#0066cc;stroke-width:3;}
+  .bit-ext{fill:none;stroke:#0066cc;stroke-width:2.5;stroke-dasharray:2 5;opacity:.78;}
+  .bitdot{fill:#0066cc;}
+  .bitlab{font-size:11px;fill:#0a5; font-weight:600;}
+  .ceil{fill:none;stroke:#b5654a;stroke-width:1.8;stroke-dasharray:5 4;opacity:.85;}
+  .floor{fill:none;stroke:#b5654a;stroke-width:3;}
+  .floor-ext{fill:none;stroke:#b5654a;stroke-width:2.5;stroke-dasharray:2 5;opacity:.7;}
+  .band{fill:#b5654a;opacity:.07;}
+  .pt-lab{font-size:11.5px;font-weight:600;}
+  .note-blue{fill:#0066cc;}
+  .note-earth{fill:#a4552f;}
+  .gap-lab{font-size:13px;font-weight:700;fill:#1d1d1f;}
+  .gap-sub{font-size:11px;fill:#6e6e73;}
+  .legend{display:flex;flex-wrap:wrap;gap:18px;font-size:12.5px;color:#424245;margin:10px 2px 0;}
+  .legend span{display:inline-flex;align-items:center;gap:7px;}
+  .sw{width:22px;height:0;border-top-width:3px;border-top-style:solid;display:inline-block;}
+  .read{font-size:13px;color:#424245;background:#f5f5f7;border-radius:10px;padding:12px 15px;margin-top:16px;line-height:1.6;}
+  .read b{color:#1d1d1f;}
+  .src{font-size:10.5px;color:#86868b;margin-top:14px;padding-top:12px;border-top:1px solid #ededf0;line-height:1.6;}
+  .src b{color:#6e6e73;}
+</style>
+</head>
+<body>
+<div class="fig">
+  <svg viewBox="0 0 900 530" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif">
+
+    <!-- y reference gridlines + labels (log: time horizon) -->
+    <line class="gl" x1="90" y1="431" x2="850" y2="431"/><text class="yref" x="84" y="435" text-anchor="end">1 分</text>
+    <line class="gl" x1="90" y1="354" x2="850" y2="354"/><text class="yref" x="84" y="358" text-anchor="end">10 分</text>
+    <line class="gl" x1="90" y1="294" x2="850" y2="294"/><text class="yref" x="84" y="298" text-anchor="end">1 时</text>
+    <line class="gl" x1="90" y1="187" x2="850" y2="187"/><text class="yref" x="84" y="191" text-anchor="end">1 天</text>
+    <line class="gl" x1="90" y1="122" x2="850" y2="122"/><text class="yref" x="84" y="126" text-anchor="end">1 周</text>
+
+    <!-- axes -->
+    <line class="axis" x1="90" y1="60" x2="90" y2="470"/>
+    <line class="axis" x1="90" y1="470" x2="850" y2="470"/>
+    <!-- x year ticks -->
+    <text class="axlabel" x="90"  y="488" text-anchor="middle">2023</text>
+    <text class="axlabel" x="228" y="488" text-anchor="middle">2024</text>
+    <text class="axlabel" x="366" y="488" text-anchor="middle">2025</text>
+    <text class="axlabel" x="505" y="488" text-anchor="middle">2026</text>
+    <text class="axlabel" x="643" y="488" text-anchor="middle">2027</text>
+    <text class="axlabel" x="781" y="488" text-anchor="middle">2028</text>
+    <text class="axlabel" x="90" y="46" text-anchor="start">自主时长（对数）</text>
+
+    <!-- ====== ATOM band (demo ceiling ↔ open-world floor) ====== -->
+    <path class="band" d="M228,388 L366,350 L505,316 L643,300 L781,292 L781,408 L643,422 L505,432 L366,444 L228,450 Z"/>
+    <!-- demo ceiling (dashed) -->
+    <polyline class="ceil" points="228,388 366,350 505,316"/>
+    <polyline class="ceil" points="505,316 643,300 781,292" stroke-dasharray="2 5"/>
+    <!-- open-world deployment floor (solid → dashed) -->
+    <polyline class="floor" points="124,455 228,450 366,444 505,432"/>
+    <polyline class="floor-ext" points="505,432 643,422 781,408"/>
+
+    <!-- ====== BIT curve (METR measured, solid) ====== -->
+    <polyline class="bit" points="124,385 339,331 360,309 387,297 408,271 449,252 502,241 518,204"/>
+    <!-- extrapolation (dashed) -->
+    <polyline class="bit-ext" points="518,204 643,150 781,85"/>
+
+    <!-- bit data dots -->
+    <circle class="bitdot" cx="124" cy="385" r="4"/>
+    <circle class="bitdot" cx="387" cy="297" r="3.4"/>
+    <circle class="bitdot" cx="449" cy="252" r="3.4"/>
+    <circle class="bitdot" cx="502" cy="241" r="4"/>
+    <circle class="bitdot" cx="518" cy="204" r="4.6" stroke="#fff" stroke-width="1.4"/>
+
+    <!-- bit point labels -->
+    <text class="pt-lab note-blue" x="124" y="375" text-anchor="start">GPT-4 · 4 分</text>
+    <text class="pt-lab note-blue" x="498" y="233" text-anchor="end">Opus 4.5 · ~5 时</text>
+    <text class="pt-lab note-blue" x="524" y="188" text-anchor="start">Opus 4.6 · ~14.5 时</text>
+    <text class="gap-sub" x="524" y="218" text-anchor="start" fill="#0066cc" opacity=".8">（任务集近饱和）</text>
+    <text class="pt-lab note-blue" x="700" y="112" text-anchor="middle" opacity=".85">外推 → 天 → 周</text>
+
+    <!-- atom labels -->
+    <text class="pt-lab note-earth" x="240" y="406" text-anchor="start">实验室 demo（窄域 · 不泛化）</text>
+    <text class="pt-lab note-earth" x="300" y="466" text-anchor="start">开放世界可靠部署 · ~0–42%</text>
+    <text class="gap-sub" x="124" y="462" text-anchor="start" fill="#a4552f">鸡蛋 / 叠衣 demo 已达 90%+</text>
+    <text class="gap-sub" x="640" y="452" text-anchor="start" fill="#a4552f" opacity=".8">飞轮刚起步</text>
+
+    <!-- the gap annotation -->
+    <line x1="540" y1="216" x2="540" y2="312" stroke="#1d1d1f" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>
+    <line x1="536" y1="216" x2="544" y2="216" stroke="#1d1d1f" stroke-width="1" opacity=".5"/>
+    <line x1="536" y1="312" x2="544" y2="312" stroke="#1d1d1f" stroke-width="1" opacity=".5"/>
+    <text class="gap-lab" x="560" y="262" text-anchor="start">这道豁口</text>
+    <text class="gap-sub" x="560" y="278" text-anchor="start">= 下一个时代的形状</text>
+  </svg>
+
+  <div style="font-size:10.5px;color:#86868b;line-height:1.55;margin-top:7px;">数据来源：比特侧 — METR《Measuring AI Ability to Complete Long Tasks》(2025-03) 及 Time Horizon 1.1 (2026-01-29)：GPT-4 ≈4 分、Opus 4.5 ≈4 时 49 分、Opus 4.6 ≈14.5 时（METR 标注任务集近饱和）；>16 时为外推（metr.org/time-horizons）。物理侧 — 实验室 demo：Tesla Optimus 抓鸡蛋、π0/π0.6 叠衣（窄域）；开放世界独立实测：宾大 PAL 野外测 π0 平均进度 42%、陌生物体 0%（penn-pal-lab.github.io, 2025）。</div>
+  <div style="font-size:12px;color:#1d1d1f;line-height:1.55;margin-top:4px;">图 2：两条发散的曲线——比特侧自主完成任务的时长（METR 实测）逐年指数上升；物理侧在开放世界长尾的可靠泛化仍贴地（独立野外实测 0–42%）。</div>
+</div>
+<script>(function(){var m=(location.hash.match(/n=(\d+)/)||[])[1];function s(){var el=document.querySelector(".fig")||document.body;try{parent.postMessage({__figN:m,__figH:Math.ceil(el.getBoundingClientRect().height)+6},"*");}catch(e){}}addEventListener("load",s);try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.querySelector(".fig")||document.body);}catch(e){}[120,400,1000,2200].forEach(function(t){setTimeout(s,t);});})();</script>
+</body>
+</html>

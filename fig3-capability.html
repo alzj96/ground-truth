@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>开源正在追上前沿 · 能力收敛</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;color:#1d1d1f;line-height:1.5;padding:0;}
+  .fig{max-width:920px;margin:0 auto;background:#fff;border:none;border-radius:0;padding:0;box-shadow:none;}
+  .eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.4px;color:#0066cc;margin-bottom:8px;}
+  h1{font-size:17px;font-weight:700;letter-spacing:-.2px;margin-bottom:5px;}
+  .thesis{font-size:12.5px;color:#424245;max-width:780px;margin-bottom:4px;}
+  .thesis b{color:#1d1d1f;}
+  svg{display:block;width:100%;height:auto;margin:0 0 2px;}
+  .gl{stroke:#ededf0;stroke-width:1;}
+  .axis{stroke:#c7c7cc;stroke-width:1;}
+  .axlabel{font-size:11px;fill:#86868b;}
+  .src{font-size:10.5px;color:#86868b;margin-top:14px;padding-top:12px;border-top:1px solid #ededf0;line-height:1.6;}
+  .src b{color:#6e6e73;}
+</style>
+</head>
+<body>
+<div class="fig">
+  <svg id="chart" viewBox="0 0 760 460" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif">
+  </svg>
+
+  <div style="font-size:10.5px;color:#86868b;line-height:1.55;margin-top:7px;">数据来源：综合能力为示意指数（综合多项公开基准）；模型与时点为公开信息，参考 Epoch AI / Artificial Analysis。</div>
+  <div style="font-size:12px;color:#1d1d1f;line-height:1.55;margin-top:4px;">图 3：全球最前沿（闭源）与开源顶尖模型的综合能力随时间变化——代际差距从约一代收敛到数月。</div>
+</div>
+
+<script>
+(function(){
+  const svg = document.getElementById('chart');
+  const VW = 760, VH = 460;
+
+  // layout
+  const L = 72, R = 720, T = 36, B = 420;
+  const W = R - L, H = B - T;
+
+  // scales
+  const xMin = 2023, xMax = 2026.5;
+  const yMin = 45,   yMax = 100;
+
+  function x(year) { return L + (year - xMin) / (xMax - xMin) * W; }
+  function y(val)  { return B - (val  - yMin) / (yMax - yMin) * H; }
+
+  let html = '';
+
+  // ── grid lines & y-axis labels ─────────────────────────────────────
+  const yTicks = [50, 60, 70, 80, 90, 100];
+  yTicks.forEach(v => {
+    const yy = y(v);
+    html += `<line class="gl" x1="${L}" y1="${yy}" x2="${R}" y2="${yy}"/>`;
+    html += `<text class="axlabel" x="${L - 6}" y="${yy + 4}" text-anchor="end">${v}</text>`;
+  });
+
+  // x-axis labels
+  [2023, 2024, 2025, 2026].forEach(yr => {
+    html += `<text class="axlabel" x="${x(yr)}" y="${B + 18}" text-anchor="middle">${yr}</text>`;
+  });
+
+  // axis lines
+  html += `<line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${B}"/>`;
+  html += `<line class="axis" x1="${L}" y1="${B}" x2="${R}" y2="${B}"/>`;
+
+  // axis title — single line above plot area, left-aligned, clear of tick labels
+  html += `<text class="axlabel" x="${L}" y="${T - 14}" text-anchor="start">综合能力（示意指数）</text>`;
+
+  // ── data ───────────────────────────────────────────────────────────
+  const closed = [
+    // GPT-4: point (109,238). Above, ly=-26 → baseline 212, top 199. Dot top=233.5. Gap=21px.
+    {yr: 2023.2, v: 71, name: 'GPT-4',             lx: 2,  ly: -26, anchor: 'middle'},
+    // GPT-4o: point (331,176). Above, ly=-26 → baseline 150, top 137.
+    // Line seg (331,176)→(424,141): at x=337+width=375, line y=176-(375-331)/(424-331)*35=176-16.6=159.4
+    // Label bottom=150. Gap=9.4px. Clear.
+    {yr: 2024.4, v: 80, name: 'GPT-4o',            lx: 6,  ly: -26, anchor: 'start'},
+    // o1: point (424,141). Above, ly=-26 → baseline 115, top 102.
+    // Line seg (424,141)→(590,92): at x=430, line y=141-(430-424)/(590-424)*49=141-1.8=139.2. Label bottom=115. Gap=24px.
+    {yr: 2024.9, v: 85, name: 'o1',                lx: 6,  ly: -26, anchor: 'start'},
+    // GPT-5/Opus 4.5: point (590,92). Above, anchor=end, ly=-26 → baseline 66, top 53.
+    // Line seg (424,141)→(590,92): at x=584 (label left), line y=141-(584-424)/166*49=141-47.2=93.8. Label bottom=66. Gap=27.8px.
+    {yr: 2025.8, v: 92, name: 'GPT-5 / Opus 4.5',  lx: -6, ly: -26, anchor: 'end'},
+    // last closed point (664,71): no name label — series label handles it
+    {yr: 2026.2, v: 95, name: '',                   lx: 0,  ly: 0,   anchor: 'start'},
+  ];
+
+  const open = [
+    // Llama 2: point (183,371). Below, ly=26 → baseline 397, top 384. Dot bottom=375.5. Gap=8.5px.
+    {yr: 2023.6, v: 52, name: 'Llama 2',           lx: 6,  ly: 26,  anchor: 'start'},
+    // Llama 3: point (331,252). Below, ly=26 → baseline 278, top 265.
+    // Line seg (183,371)→(331,252): at x=325 (label right), line y=371-(325-183)/(331-183)*119=371-114.2=256.8. Label top=265. Gap=8.2px.
+    {yr: 2024.4, v: 69, name: 'Llama 3',           lx: -6, ly: 26,  anchor: 'end'},
+    // DeepSeek-R1: point (461,148). Below, ly=26 → baseline 174, top 161.
+    // Line seg (331,252)→(461,148): at x=467, past endpoint. Seg (461,148)→(609,112): at x=467, y=148-(467-461)/(609-461)*36=148-1.5=146.5. Label top=161>146.5. Gap=14.5px.
+    {yr: 2025.1, v: 84, name: 'DeepSeek-R1',       lx: 6,  ly: 26,  anchor: 'start'},
+    // DeepSeek V3.2: point (609,112). Anchor start, lx=+10 → left edge=619.
+    // Line at x=619: y=112-(619-609)/(701-609)*27=112-2.9=109. Label top=142. Gap=33px from line.
+    // Left-bottom corner (619,142) to seg(461,148→609,112): at x=619 past endpoint, dist to (609,112)=sqrt(100+900)=31.6px. Clear.
+    {yr: 2025.9, v: 89, name: 'DeepSeek V3.2',     lx: 10, ly: 30,  anchor: 'start'},
+    // DeepSeek V4: point (701,85). ly=76 → baseline=161, top=148.
+    // DeepSeek V3.2 bottom=143, gap=5px. 开源顶尖 bottom=129, gap=19px. Line at x=693: y=87.3, label top=148, clear.
+    {yr: 2026.4, v: 93, name: 'DeepSeek V4',       lx: -8, ly: 76,  anchor: 'end'},
+  ];
+
+  // ── convergence hint: horizontal dashed line at ~84 ───────────────
+  const yConv = y(84);
+  html += `<line x1="${L}" y1="${yConv}" x2="${R}" y2="${yConv}"
+    stroke="#d1d1d6" stroke-width="1" stroke-dasharray="4 5" opacity=".6"/>`;
+
+  // ── draw closed-source line ────────────────────────────────────────
+  const closedPts = closed.map(d => `${x(d.yr)},${y(d.v)}`).join(' ');
+  html += `<polyline points="${closedPts}" fill="none" stroke="#0066cc" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+  // ── draw open-source line ──────────────────────────────────────────
+  const openPts = open.map(d => `${x(d.yr)},${y(d.v)}`).join(' ');
+  html += `<polyline points="${openPts}" fill="none" stroke="#b5654a" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+  // ── dots & labels: closed ─────────────────────────────────────────
+  closed.forEach(d => {
+    const cx = x(d.yr), cy = y(d.v);
+    html += `<circle cx="${cx}" cy="${cy}" r="4.5" fill="#0066cc" stroke="#fff" stroke-width="1.5"/>`;
+    html += `<text x="${cx + d.lx}" y="${cy + d.ly}" text-anchor="${d.anchor}"
+      font-size="10.5" fill="#0066cc" font-weight="600">${d.name}</text>`;
+  });
+
+  // ── dots & labels: open ───────────────────────────────────────────
+  open.forEach(d => {
+    const cx = x(d.yr), cy = y(d.v);
+    html += `<circle cx="${cx}" cy="${cy}" r="4.5" fill="#b5654a" stroke="#fff" stroke-width="1.5"/>`;
+    html += `<text x="${cx + d.lx}" y="${cy + d.ly}" text-anchor="${d.anchor}"
+      font-size="10.5" fill="#b5654a" font-weight="600">${d.name}</text>`;
+  });
+
+  // ── series end-labels ─────────────────────────────────────────────
+  // closed last point: x(2026.2)=664, y(95)=71.
+  // "闭源前沿" ≈5ch*12≈60px wide. Place left of last point, above line:
+  // anchor=end, x=664-8=656, y=71-10=61. Left edge≈596. Above blue line, clear of DeepSeek V3.2 label.
+  html += `<text x="${x(2026.2) - 8}" y="${y(95) - 10}" text-anchor="end"
+    font-size="12" fill="#0066cc" font-weight="700">闭源前沿</text>`;
+  // open last point: x(2026.4)=701, y(93)=85.
+  // "开源顶尖" ≈5ch*12≈60px wide. Place left of last point, below line:
+  // open last point: x(2026.4)=701, y(93)=85.
+  // 开源顶尖 ly=44 → baseline=129, top=116.
+  // Open line at x=619 (left edge of label): y=109. Label top=116. Gap=7px. Clear of line.
+  // DeepSeek V4 ly=64 → top=136. Gap from 开源顶尖 bottom(129)=7px. Clear.
+  html += `<text x="${x(2026.4) - 8}" y="${y(93) + 44}" text-anchor="end"
+    font-size="12" fill="#b5654a" font-weight="700">开源顶尖</text>`;
+
+  // ── convergence annotation ────────────────────────────────────────
+  // place in the upper-left open area
+  html += `<text x="${x(2023.1)}" y="${y(98)}" text-anchor="start"
+    font-size="11" fill="#6e6e73">代际差距：约 15 个月 → 约 3–4 个月</text>`;
+
+  svg.innerHTML = html;
+})();
+</script>
+<script>(function(){var m=(location.hash.match(/n=(\d+)/)||[])[1];function s(){var el=document.querySelector(".fig")||document.body;try{parent.postMessage({__figN:m,__figH:Math.ceil(el.getBoundingClientRect().height)+6},"*");}catch(e){}}addEventListener("load",s);try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.querySelector(".fig")||document.body);}catch(e){}[120,400,1000,2200].forEach(function(t){setTimeout(s,t);});})();</script>
+</body>
+</html>

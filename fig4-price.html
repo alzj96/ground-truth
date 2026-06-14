@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>价格塌缩 · 同等能力，价格以数量级塌缩</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;color:#1d1d1f;line-height:1.5;padding:0;}
+  .fig{max-width:920px;margin:0 auto;background:#fff;border:none;border-radius:0;padding:0;box-shadow:none;}
+  .eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.4px;color:#0066cc;margin-bottom:8px;}
+  h1{font-size:17px;font-weight:700;letter-spacing:-.2px;margin-bottom:5px;}
+  .thesis{font-size:12.5px;color:#424245;max-width:780px;margin-bottom:4px;}
+  .thesis b{color:#1d1d1f;}
+  svg{display:block;width:100%;height:auto;margin:0 0 2px;}
+  .gl{stroke:#ededf0;stroke-width:1;}
+  .axis{stroke:#c7c7cc;stroke-width:1;}
+  .axlabel{font-size:11px;fill:#86868b;}
+  .src{font-size:10.5px;color:#86868b;margin-top:14px;padding-top:12px;border-top:1px solid #ededf0;line-height:1.6;}
+  .src b{color:#6e6e73;}
+</style>
+</head>
+<body>
+<div class="fig">
+  <svg id="chart" viewBox="0 0 760 460" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif"></svg>
+
+  <div style="font-size:10.5px;color:#86868b;line-height:1.55;margin-top:7px;">数据来源：各模型公布的 API 输出价（每百万 token）量级；DeepSeek V4 Flash 为输入 $0.14／输出 $0.28。各厂商官方定价。</div>
+  <div style="font-size:12px;color:#1d1d1f;line-height:1.55;margin-top:4px;">图 4：主流模型 API 价格随时间塌缩（每百万 output token，对数轴）——开源高性价比模型已比前沿旗舰低一个数量级以上。</div>
+</div>
+
+<script>
+(function(){
+  // Layout constants
+  const L = 90, R = 600, T = 40, B = 400;
+  const W = 760, H = 460;
+
+  // X scale: year 2023 → 2026.5
+  const xMin = 2023.0, xMax = 2026.6;
+  function xScale(yr){ return L + (yr - xMin) / (xMax - xMin) * (R - L); }
+
+  // Y scale: log10, price range 0.1 → 100
+  const yMin = 0.1, yMax = 100;
+  function yScale(price){ return B - (Math.log10(price) - Math.log10(yMin)) / (Math.log10(yMax) - Math.log10(yMin)) * (B - T); }
+
+  // Data
+  const blue = [
+    {yr:2023.3, p:60,  label:"GPT-4"},
+    {yr:2023.9, p:30,  label:"GPT-4 Turbo"},
+    {yr:2024.5, p:10,  label:"GPT-4o"},
+    {yr:2025.8, p:10,  label:"GPT-5"},
+    {yr:2026.2, p:12,  label:"前沿旗舰"},
+  ];
+  const brown = [
+    {yr:2024.4, p:0.9,  label:"Llama 3"},
+    {yr:2025.1, p:2.2,  label:"DeepSeek-R1"},
+    {yr:2025.9, p:0.42, label:"DeepSeek V3.2"},
+    {yr:2026.4, p:0.28, label:"DeepSeek V4 Flash"},
+  ];
+
+  // Grid lines
+  const gridPrices = [0.1, 1, 10, 100];
+  const gridLabels = ["$0.1","$1","$10","$100"];
+
+  let svg = '';
+
+  // Grid lines + Y labels
+  gridPrices.forEach((p, i) => {
+    const y = yScale(p);
+    svg += `<line class="gl" x1="${L}" y1="${y}" x2="${R}" y2="${y}"/>`;
+    svg += `<text class="axlabel" x="${L-6}" y="${y+4}" text-anchor="end">${gridLabels[i]}</text>`;
+  });
+
+  // Axes
+  svg += `<line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${B}"/>`;
+  svg += `<line class="axis" x1="${L}" y1="${B}" x2="${R}" y2="${B}"/>`;
+
+  // X axis labels (years)
+  [2023, 2024, 2025, 2026].forEach(yr => {
+    const x = xScale(yr);
+    svg += `<text class="axlabel" x="${x}" y="${B+18}" text-anchor="middle">${yr}</text>`;
+  });
+
+  // Axis title（单行置于绘图区上方，避开 $100 刻度）
+  svg += `<text class="axlabel" x="${L}" y="${T-16}" text-anchor="start">$ / 百万 token（对数）</text>`;
+
+  // Helper: polyline points string
+  function pts(data){ return data.map(d => `${xScale(d.yr).toFixed(1)},${yScale(d.p).toFixed(1)}`).join(' '); }
+
+  // Brown line (开源)
+  svg += `<polyline fill="none" stroke="#b5654a" stroke-width="2.8" points="${pts(brown)}"/>`;
+
+  // Blue line (旗舰)
+  svg += `<polyline fill="none" stroke="#0066cc" stroke-width="2.8" points="${pts(blue)}"/>`;
+
+  // 单行标签"模型 $价"，逐点手工定位：互不压线、不压刻度、紧邻点而不重叠
+  // 蓝线（前沿旗舰）：GPT-4 上 / Turbo 右上 / GPT-4o 下 / GPT-5 下 / 前沿旗舰 右上
+  const blueLab = [
+    {lx:6,  ly:-9, a:'start'},
+    {lx:8,  ly:-4, a:'start'},
+    {lx:-7, ly:17, a:'end'},
+    {lx:-7, ly:17, a:'end'},
+    {lx:9,  ly:-9, a:'start'},
+  ];
+  blue.forEach((d, i) => {
+    const x = xScale(d.yr), y = yScale(d.p), o = blueLab[i];
+    svg += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.2" fill="#0066cc"/>`;
+    svg += `<text font-size="11" font-weight="600" fill="#0066cc" x="${(x+o.lx).toFixed(1)}" y="${(y+o.ly).toFixed(1)}" text-anchor="${o.a}">${d.label} $${d.p}</text>`;
+  });
+
+  // 土褐线（开源）：Llama 3 下左 / DeepSeek-R1 上 / V3.2 下左 / V4 Flash 右（与 V3.2 反向错开，不互压）
+  const brownLab = [
+    {lx:-7, ly:17, a:'end'},
+    {lx:8,  ly:-9, a:'start'},
+    {lx:-7, ly:17, a:'end'},
+    {lx:9,  ly:5,  a:'start'},
+  ];
+  brown.forEach((d, i) => {
+    const x = xScale(d.yr), y = yScale(d.p), o = brownLab[i];
+    svg += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.2" fill="#b5654a"/>`;
+    svg += `<text font-size="11" font-weight="600" fill="#b5654a" x="${(x+o.lx).toFixed(1)}" y="${(y+o.ly).toFixed(1)}" text-anchor="${o.a}">${d.label} $${d.p}</text>`;
+  });
+
+  // （2026 两线差距：由图说"低一个数量级以上"说明；两线在对数轴上的纵向间距已直观体现，不再叠加括号避免压字）
+
+  document.getElementById('chart').innerHTML = svg;
+})();
+</script>
+<script>(function(){var m=(location.hash.match(/n=(\d+)/)||[])[1];function s(){var el=document.querySelector(".fig")||document.body;try{parent.postMessage({__figN:m,__figH:Math.ceil(el.getBoundingClientRect().height)+6},"*");}catch(e){}}addEventListener("load",s);try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(s);if(window.ResizeObserver)new ResizeObserver(s).observe(document.querySelector(".fig")||document.body);}catch(e){}[120,400,1000,2200].forEach(function(t){setTimeout(s,t);});})();</script>
+</body>
+</html>
