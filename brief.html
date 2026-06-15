@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>5 分钟速看 · 基准真相</title>
+<title>5 分钟 AI 速读 · 基准真相</title>
 <style>
 :root{
   --serif: Georgia,"Songti SC","Source Han Serif SC","Noto Serif CJK SC",serif;
@@ -52,6 +52,12 @@ ol li::marker{color:var(--ink);font-weight:400;}
 .more a{color:var(--accent);text-decoration:none;font-weight:600;}
 .more a:hover{text-decoration:underline;}
 .tip{color:var(--muted);font-size:15.5px;}
+#fullBtn{display:none;}
+@media(max-width:1330px){
+  #fullBtn{display:inline-flex;align-items:center;gap:6px;position:fixed;left:18px;bottom:18px;z-index:65;
+    background:var(--ink);color:#fff;font-family:var(--sans);font-size:13px;font-weight:600;
+    padding:11px 17px;border-radius:30px;box-shadow:0 4px 16px rgba(0,0,0,.22);text-decoration:none;}
+}
 @media(max-width:560px){.title{font-size:31px;}article{padding:32px 18px 90px;}}
 </style>
 </head>
@@ -60,7 +66,7 @@ ol li::marker{color:var(--ink);font-weight:400;}
 
 <div class="back"><a href="index.html">← 基准真相 · 完整版</a></div>
 
-<div class="eyebrow">5 分钟速看</div>
+<div class="eyebrow">5 分钟 AI 速读</div>
 <h1 class="title">基准真相</h1>
 <div class="subtitle">当比特撞上原子 · 精华版</div>
 <div class="byline">Arron Zeng · 2026 年 6 月</div>
@@ -153,5 +159,6 @@ ol li::marker{color:var(--ink);font-weight:400;}
 <p class="more"><a href="index.html">读完整论证 →</a></p>
 
 </article>
+<a id="fullBtn" href="index.html" aria-label="完整阅读">← 完整阅读</a>
 </body>
 </html>
