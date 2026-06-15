@@ -98,7 +98,7 @@ a.secref:hover{text-decoration:underline;}
 figcaption{font-family:var(--sans);font-size:12.5px;color:var(--muted);margin-top:11px;line-height:1.6;}
 
 /* mobile */
-#menuBtn,#scrim{display:none;}
+#menuBtn,#briefBtn,#scrim{display:none;}
 @media(max-width:1330px){
   .layout{padding:0;}
   article{max-width:100%;margin:0;padding:48px 20px 110px;}
@@ -112,9 +112,11 @@ figcaption{font-family:var(--sans);font-size:12.5px;color:var(--muted);margin-to
   #toc .toc-group{display:block!important;}
   #toc .toc-children{max-height:none!important;opacity:1!important;overflow:visible;}
   .toc-chev{display:none;}
-  #menuBtn{display:inline-flex;align-items:center;gap:6px;position:fixed;left:18px;bottom:18px;z-index:65;
-    border:none;cursor:pointer;background:var(--ink);color:#fff;font-family:var(--sans);font-size:13px;
-    font-weight:600;padding:11px 17px;border-radius:30px;box-shadow:0 4px 16px rgba(0,0,0,.22);}
+  #menuBtn,#briefBtn{display:inline-flex;align-items:center;gap:6px;position:fixed;bottom:18px;z-index:65;
+    border:none;cursor:pointer;color:#fff;font-family:var(--sans);font-size:13px;
+    font-weight:600;padding:11px 17px;border-radius:30px;box-shadow:0 4px 16px rgba(0,0,0,.22);text-decoration:none;}
+  #menuBtn{left:18px;background:var(--ink);}
+  #briefBtn{right:18px;background:var(--accent);}
   #scrim{position:fixed;inset:0;background:rgba(0,0,0,.34);z-index:55;}
   #scrim.show{display:block;}
 }
@@ -385,6 +387,7 @@ figcaption{font-family:var(--sans);font-size:12.5px;color:var(--muted);margin-to
   </article>
 </div>
 <button id="menuBtn" aria-label="打开目录">☰ 目录</button>
+<a id="briefBtn" href="brief.html" aria-label="5 分钟 AI 简述">5 分钟 AI 简述 →</a>
 <div id="scrim"></div>
 <script>
 (function(){
