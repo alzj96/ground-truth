@@ -59,6 +59,42 @@ ol li::marker{color:var(--ink);font-weight:400;}
     height:42px;padding:0 18px;line-height:1;border-radius:30px;box-shadow:0 4px 16px rgba(0,0,0,.22);text-decoration:none;}
 }
 @media(max-width:560px){.title{font-size:31px;}article{padding:32px 18px 90px;}}
+<!--TERMCARD:CSS-->
+
+/* ---- 术语卡：虚线词 + 就地展开的释义（释义写在 DOM 里，可打印、可被抓取） ---- */
+.term{position:relative;border-bottom:1px dashed rgba(0,102,204,.5);cursor:pointer;
+  transition:border-color .15s,background .15s;}
+.term:hover,.term.open{border-bottom-color:var(--accent);background:rgba(0,102,204,.07);}
+.term-card{position:absolute;z-index:40;top:calc(100% + 10px);left:50%;
+  transform:translateX(calc(-50% + var(--dx,0px)));
+  width:330px;max-width:calc(100vw - 24px);
+  background:#fff;border:1px solid var(--rule);border-radius:8px;
+  box-shadow:0 8px 30px rgba(0,0,0,.13),0 1px 3px rgba(0,0,0,.06);
+  padding:14px 16px 15px;font-family:var(--sans);font-size:13.5px;line-height:1.75;
+  color:var(--soft);text-align:left;text-indent:0;font-weight:400;letter-spacing:0;
+  visibility:hidden;opacity:0;pointer-events:none;
+  transition:opacity .16s ease,visibility .16s;cursor:auto;}
+.term-card.up{top:auto;bottom:calc(100% + 10px);}
+.term-card::before{content:'';position:absolute;top:-5px;left:calc(50% - 5px - var(--dx,0px));
+  width:9px;height:9px;background:#fff;border-left:1px solid var(--rule);border-top:1px solid var(--rule);
+  transform:rotate(45deg);}
+.term-card.up::before{top:auto;bottom:-5px;transform:rotate(225deg);}
+.term-t{display:block;font-weight:700;color:var(--ink);font-size:14px;margin-bottom:5px;letter-spacing:.01em;}
+.term-card strong{font-weight:700;color:var(--ink);}
+.term.open>.term-card{visibility:visible;opacity:1;pointer-events:auto;}
+@media(hover:hover) and (pointer:fine){ .term:hover>.term-card{visibility:visible;opacity:1;pointer-events:auto;} }
+@media(max-width:700px){
+  .term-card,.term-card.up{position:fixed;z-index:70;top:auto;bottom:0;left:0;right:0;width:auto;max-width:none;
+    transform:translateY(8px);border-radius:14px 14px 0 0;border-bottom:none;
+    padding:18px 20px calc(20px + env(safe-area-inset-bottom));font-size:14.5px;
+    box-shadow:0 -6px 30px rgba(0,0,0,.2);transition:opacity .18s ease,transform .18s ease,visibility .18s;}
+  .term-card::before{display:none;}
+  .term.open>.term-card{transform:translateY(0);}
+  .term-t{font-size:15px;}
+  /* 底部卡片弹出时让开那两个胶囊按钮 */
+  body.term-open #menuBtn,body.term-open #briefBtn,body.term-open #fullBtn{opacity:0;pointer-events:none;transition:opacity .18s;}
+}
+<!--/TERMCARD:CSS-->
 </style>
 </head>
 <body>
@@ -78,7 +114,7 @@ ol li::marker{color:var(--ink);font-weight:400;}
 
 <h2>一、来的是"类AGI"，不是全能的 AGI</h2>
 <ul>
-<li>评估机构 METR 实测：AI 能自主完成的任务时长，<strong>每 4–7 个月翻一倍</strong>，三年从 5 分钟干到 16 小时以上，还在加速。沿这条线推，2027 年能自主干完人类要数天到数周的活。</li>
+<li>评估机构 <span class="term" tabindex="0" role="button" aria-label="术语 METR">METR<span class="term-card"><span class="term-t">METR</span>Model Evaluation &amp; Threat Research，一家独立的AI能力评估机构，不隶属于任何模型厂商。它最出名的指标是"任务时长"：把AI能自主完成的任务，换算成一个人类专家做同一件事要花多久。口径是50%成功率——所以"能跑16小时"的准确含义是"这个长度的任务它有一半概率能跑完"，不是"跑完的就是对的"。它的任务集也基本是软件工程与机器学习研究，全程活在比特侧。</span></span> 实测：AI 能自主完成的任务时长，<strong>每 4–7 个月翻一倍</strong>，三年从 5 分钟干到 16 小时以上，还在加速。沿这条线推，2027 年能自主干完人类要数天到数周的活。</li>
 <li>但要会读这条线：它全程量的是"比特"（能在电脑里跑、能自动判分的任务），而且是 <strong>50% 成功率</strong>——能跑 16 小时，不等于这 16 小时的产出都可信，它是<strong>需要人复核重跑的半成品</strong>。</li>
 <li>真正的分水岭不再是"AGI 来没来"，而是：<strong>当认知劳动的价格趋近电费，你这一行还剩下什么。</strong></li>
 </ul>
@@ -86,24 +122,24 @@ ol li::marker{color:var(--ink);font-weight:400;}
 <h2>二、一道越裂越大的豁口：比特冲顶，原子贴地</h2>
 <ul>
 <li>同一个智能，解奥数、独立重写整个代码库是超人；可换一个没见过的物体、没见过的厨房，抓杯子、叠衣服的成功率<strong>从九成掉到接近零</strong>。</li>
-<li>根子在数据：互联网是物理世界的一份"有损压缩"。焊工的手感、机长在侧风里的微调、医生指尖对组织张力的判断——这些<strong>写不进文字</strong>（波兰尼悖论）。LeCun 算过，一个四岁小孩单靠眼睛摄入的数据，就是最大语言模型文本语料的 <strong>50–100 倍</strong>。<strong>缺的从来不是算力，是现实。</strong></li>
+<li>根子在数据：互联网是物理世界的一份"有损压缩"。焊工的手感、机长在侧风里的微调、医生指尖对组织张力的判断——这些<strong>写不进文字</strong>（<span class="term" tabindex="0" role="button" aria-label="术语 波兰尼悖论">波兰尼悖论<span class="term-card"><span class="term-t">波兰尼悖论</span>哲学家波兰尼的命题：我们知道的，远多于我们能说出的。焊工对熔池的判断、机长在侧风中的手感、外科医生指尖对组织张力的感知——这些构成生产力核心的技能从未被写成文字，因此互联网上也就没有它们的数据。本文把它从一个认识论命题，推成劳动力市场的分界线。</span></span>）。<span class="term" tabindex="0" role="button" aria-label="术语 Yann LeCun">LeCun<span class="term-card"><span class="term-t">Yann LeCun</span>图灵奖得主，深度学习三位奠基人之一，在Meta当了约十二年首席AI科学家，2025年11月因路线分歧宣布离开。他的判断是：只靠预测下一个词的大语言模型，永远到不了人类水平的智能，真正的智能必须从连续、高维、带噪声的传感器数据里学到世界怎么运转。JEPA与他在巴黎创立的AMI Labs，都是这个判断的落地。</span></span> 算过，一个四岁小孩单靠眼睛摄入的数据，就是最大语言模型文本语料的 <strong>50–100 倍</strong>。<strong>缺的从来不是算力，是现实。</strong></li>
 </ul>
 
 <h2>三、能力 ≠ 可托付：两道和"聪不聪明"无关的坎</h2>
 <h3>第一道坎 · 给不出一个可信赖的确定答案</h3>
 <p class="flush">五个结构性毛病：</p>
 <ul>
-<li><strong>不确定</strong>——同一个问题问两次可能两个答案，连贪婪解码都做不到逐位可复现；</li>
+<li><strong>不确定</strong>——同一个问题问两次可能两个答案，连<span class="term" tabindex="0" role="button" aria-label="术语 贪婪解码">贪婪解码<span class="term-card"><span class="term-t">贪婪解码</span>每一步都取概率最高的那个词、不做随机采样的生成方式（也就是temperature=0），照理说应该每次输出一模一样。2025年的实测发现它做不到：推理服务按负载动态拼批，而浮点加法不满足结合律，同一句话跑一千次能跑出八十种结果。</span></span>都做不到逐位可复现；</li>
 <li><strong>脆弱</strong>——只改一下提示的排版，准确率能摆动七十多个百分点；</li>
-<li><strong>幻觉</strong>——打分机制奖励"猜对"、惩罚"我不知道"，蒙一个永远比认怂划算；</li>
-<li><strong>失忆</strong>——近乎无状态，今天所有"AI 记忆"都是外挂的脚手架，不是它自己记住的；</li>
+<li><strong><span class="term" tabindex="0" role="button" aria-label="术语 幻觉">幻觉<span class="term-card"><span class="term-t">幻觉</span>模型编造出听上去合理、实则不存在的内容——假判例、假论文、假数据。根源不在训练数据有误，在打分方式：答对得分、答错零分、说"我不知道"也是零分，那么随便给一个答案，永远比承认不知道划算。哪怕训练数据完美无误，这个压力也会把幻觉催生出来。</span></span></strong>——打分机制奖励"猜对"、惩罚"我不知道"，蒙一个永远比认怂划算；</li>
+<li><strong>失忆</strong>——近乎<span class="term" tabindex="0" role="button" aria-label="术语 无状态">无状态<span class="term-card"><span class="term-t">无状态</span>指模型不带持续记忆：权重在训练那一刻就冻结了，此后不再变；每次对话的上下文用完即清零。所以它没有情景记忆——昨天跟你聊过什么，它自己是不知道的。</span></span>，今天所有"AI 记忆"都是外挂的脚手架，不是它自己记住的；</li>
 <li><strong>静默地错</strong>——用和正确答案一模一样自信的语气编瞎话。</li>
 </ul>
 <p>要命的不是"错得比人多"，而是这几样很少在人身上同时凑齐：<strong>不可预测、不可复现、错了还没有信号</strong>。</p>
 <h3>第二道坎 · 没人能为结果负责</h3>
 <p class="flush">AI 不能持牌、不能被起诉、不能坐牢、买不了职业责任险。加拿大航空想把错误甩锅给聊天机器人，被法庭直接驳回——"你对它说的每一句话负责"；欧盟《AI 法案》第 14 条把"必须有人能随时叫停"写进硬法。客户买的从来不只是一个正确答案，还有<strong>"出事有人兜底"</strong>这件商品。</p>
 <div class="lead">
-<p><span class="kicker">核心干货 · 可托付税</span><br>把两道坎收成一个公式：<strong>可托付税 = 错误代价 × 漏检概率 × 失败的不可预测性</strong>。三者都低（写初稿、跑探索性分析）→ 价格真的趋近电费；只要有一项高（要审计的财报、要呈堂的意见、不可逆的医疗判断）→ 价格 = 电费 + 一个持牌人兜底 + 一份责任险。<strong>认知层不是铁板一块，被这根拨杆切成"低税"和"高税"两半。</strong></p>
+<p><span class="kicker">核心干货 · <span class="term" tabindex="0" role="button" aria-label="术语 可托付税">可托付税<span class="term-card"><span class="term-t">可托付税</span>本文提出的概念：把一件事交给AI、且没人盯着也敢用它的产出，所必须额外支付的成本。定价公式是<strong>错误的代价 × 漏检的概率 × 失败的不可预测性</strong>。三者都低的地方（写初稿、跑一次探索性分析）税趋近于零，价格就趋近电费；只要有一项高（会被审计的财报、要呈堂的意见、不可逆的医疗判断），税就高居不下，价格趋近的是"电费＋一个持牌人兜底＋一份责任险"。</span></span></span><br>把两道坎收成一个公式：<strong>可托付税 = 错误代价 × 漏检概率 × 失败的不可预测性</strong>。三者都低（写初稿、跑探索性分析）→ 价格真的趋近电费；只要有一项高（要审计的财报、要呈堂的意见、不可逆的医疗判断）→ 价格 = 电费 + 一个持牌人兜底 + 一份责任险。<strong>认知层不是铁板一块，被这根拨杆切成"低税"和"高税"两半。</strong></p>
 </div>
 
 <h2>四、冲击波，沿三个同心圆向外扩散</h2>
@@ -111,7 +147,7 @@ ol li::marker{color:var(--ink);font-weight:400;}
 <h3>最内圈 · 组织被重写</h3>
 <ul>
 <li>金字塔靠两根柱子撑着——管理幅度（一个人管不了几个人）和信息逐级衰减，两根都来自人脑带宽。把"协调介质"从人脑换成 AI，柱子同时被抽走，金字塔塌成<strong>轮辐结构</strong>：一个中心智能 + 一圈人。</li>
-<li>"AI 辅助人"正在悄悄倒转成<strong>"人辅助 AI"</strong>：人定方向、抽查、担责，AI 干活。每个一线工作者都被<strong>"批量提拔"</strong>成管理一组 Agent 的小管理者。</li>
+<li>"AI 辅助人"正在悄悄倒转成<strong>"人辅助 AI"</strong>：人定方向、抽查、担责，AI 干活。每个一线工作者都被<strong>"批量提拔"</strong>成管理一组 <span class="term" tabindex="0" role="button" aria-label="术语 Agent与脚手架">Agent<span class="term-card"><span class="term-t">Agent与脚手架</span>Agent指能自己拆解任务、调用工具、多步执行而不必每步请示的AI。脚手架指模型外面那圈让它能这样运转的工程结构——循环、记忆、工具接口、检查点。分清这两个词很要紧：能力长在模型里，自主性大多长在脚手架里，后者换得比前者快得多。</span></span> 的小管理者。</li>
 <li>价值从"答案端"搬到<strong>"问题端"</strong>——答案被 AI 无限放大，会提对问题反而最稀缺。AI 是放大器，没有信号的人，被放大的是噪声。</li>
 <li>开源模型只落后顶尖 <strong>3–4 个月</strong>、价格低一个数量级以上，一台几千美元的工作站就能私有部署：能力差距以"年"收敛，价格差距以"数量级"拉开。</li>
 </ul>
@@ -120,23 +156,23 @@ ol li::marker{color:var(--ink);font-weight:400;}
 <ul>
 <li>过去软件吃的是各行业的"工具预算"，AI 吃的是<strong>"工资预算"</strong>——后者是前者的 <strong>10–30 倍</strong>。下一个万亿级公司在"AI + 服务业"。</li>
 <li>第一波震感已经出现在<strong>职业生涯的入口</strong>：斯坦福用工资单数据发现，2022 年底以来 22–25 岁年轻人在 AI 高暴露职业的就业相对降了约 <strong>13%</strong>（入门级软件岗 −20%、客服 −11%），而同岗位的资深者反而 +6–13%。<span class="tip">（提醒：这撞上了科技业加息退潮，AI 和利率两只手都在压，眼下是信号、不是定案。）</span></li>
-<li><strong>梯子问题</strong>：资深者的本事来自当年做入门级的岁月，而那一级梯子正被抽走——二十年后的资深者从哪来？</li>
-<li>人身上还值钱的，是 AI 学不到、也验不了"真"的四样：<strong>创造力、审美与判断、是非与道德、情绪价值</strong>。市场已在用脚投票：Palantir 跳过大学，月薪 5400 美元去抢 18 岁的人——买的不是知识（知识已免费内置），是知识以外的东西。</li>
-<li><strong>恩格斯停顿</strong>：工业革命头 50 年，人均产出涨了一半、工人实际工资几乎不动，红利迟到两代人——但终究会到，因为工厂还需要工人。这一次的风险是：时间差可能更长，甚至<strong>绕行</strong>。</li>
+<li><strong><span class="term" tabindex="0" role="button" aria-label="术语 梯子问题">梯子问题<span class="term-card"><span class="term-t">梯子问题</span>本文提出的说法：资深者的默会知识，来自他们当年做入门级工作的那些年——而那一级梯子正在被抽走。如果年轻人不再有机会通过初级岗位积累经验，二十年后的资深者从哪里来。市场不会回答这个问题，它只负责定价当下。</span></span></strong>：资深者的本事来自当年做入门级的岁月，而那一级梯子正被抽走——二十年后的资深者从哪来？</li>
+<li>人身上还值钱的，是 AI 学不到、也验不了"真"的四样：<strong>创造力、审美与判断、是非与道德、情绪价值</strong>。市场已在用脚投票：<span class="term" tabindex="0" role="button" aria-label="术语 Palantir">Palantir<span class="term-card"><span class="term-t">Palantir</span>美国数据分析公司，以极扁平的组织结构和"直接把工程师派到客户现场"的打法著称。本文引它是当组织形态的样本，不作投资判断。</span></span> 跳过大学，月薪 5400 美元去抢 18 岁的人——买的不是知识（知识已免费内置），是知识以外的东西。</li>
+<li><strong><span class="term" tabindex="0" role="button" aria-label="术语 恩格斯停顿">恩格斯停顿<span class="term-card"><span class="term-t">恩格斯停顿</span>经济史学家Robert Allen给1790–1840年英国的命名：那五十年里人均产出涨了46%，实际工资只涨了12%，利润率翻倍、利润在国民收入中的份额不断扩大。技术革命的红利先流向资本，隔了两代人才扩散到劳动者。1840年之后才反转过来——产出再涨90%，工资涨了123%。本文用它做"增长与人脱钩"的历史先例。</span></span></strong>：工业革命头 50 年，人均产出涨了一半、工人实际工资几乎不动，红利迟到两代人——但终究会到，因为工厂还需要工人。这一次的风险是：时间差可能更长，甚至<strong>绕行</strong>。</li>
 </ul>
 
 <h3>最外圈 · 经济仪表盘失灵</h3>
 <ul>
-<li>"AI 这么强，为什么生产率统计里看不见？"——这不是 AI 的问题，是<strong>仪表盘的问题</strong>（索洛悖论 2.0）。GDP 只算有价格的交易：免费品测不到、"东西变便宜"显影为负、组织重写期的收益先被记成成本。电气化的红利当年迟到了三四十年。</li>
+<li>"AI 这么强，为什么生产率统计里看不见？"——这不是 AI 的问题，是<strong>仪表盘的问题</strong>（<span class="term" tabindex="0" role="button" aria-label="术语 索洛悖论">索洛悖论<span class="term-card"><span class="term-t">索洛悖论</span>1987年索洛那句名言："计算机时代随处可见，唯独在生产率统计里看不见。"电气化走过同样的时滞：发电机1880年代就有了，工厂生产率的跃升要等到1920年代。本文用它说明一件事——宏观统计对新技术必然迟到，所以拿当下的生产率数字去裁决AI的真伪，本身就不靠谱。</span></span> 2.0）。GDP 只算有价格的交易：免费品测不到、"东西变便宜"显影为负、组织重写期的收益先被记成成本。电气化的红利当年迟到了三四十年。</li>
 <li>更深的是<strong>幽灵 GDP</strong>：增长第一次可以<strong>与人无关地继续</strong>——AI 智能体把 GDP 顶上去，工资和消费同时往下崩。背后是一个没有刹车的<strong>智能位移螺旋</strong>：每省下一美元人力，都投进了让下一轮裁员成为可能的能力。</li>
-<li>所以别信名义 GDP 和生产率。真正的体温计是这四个数：<strong>劳动收入份额、货币流通速度、高收入人群的可选消费、入门级就业</strong>。GDP 告诉你机器在产什么；它们告诉你人还买不买得起。</li>
+<li>所以别信名义 GDP 和生产率。真正的体温计是这四个数：<strong><span class="term" tabindex="0" role="button" aria-label="术语 劳动收入份额">劳动收入份额<span class="term-card"><span class="term-t">劳动收入份额</span>国民收入里以工资形式分给劳动者的那一部分，其余归资本。它是本文整篇最关键的验证指标：如果白领就业明确下了台阶、而这个数不再下滑，说明收入回流的管道还在，"幽灵GDP"那条判断就算错。</span></span>、<span class="term" tabindex="0" role="button" aria-label="术语 货币流通速度">货币流通速度<span class="term-card"><span class="term-t">货币流通速度</span>同一笔钱在一段时间里被花掉几次——名义GDP除以货币供应量。它衡量的是钱在人手里转得快不快。本文把它列为"幽灵GDP"的旁证之一：如果产出增长而钱不再流转，说明这份增长没有落进人的生活里。</span></span>、高收入人群的可选消费、入门级就业</strong>。GDP 告诉你机器在产什么；它们告诉你人还买不买得起。</li>
 </ul>
 
 <h2>五、一套给任何行业用的框架（投资视角）</h2>
 <p class="flush">每个行业的命运由<strong>三个变量</strong>定，给出两个坐标——冲击<strong>何时到</strong>、<strong>有多深</strong>：</p>
 <ol>
 <li><strong>认知层厚度</strong>：纯符号操作占多大比例（律所近 100%、工地可能 20%）；再按"可托付税"切一刀，分出低税（趋电费）和高税（仍需人）。</li>
-<li><strong>物理与数据壁垒</strong>：多依赖物理在场和写不进文字的默会手艺——决定第二波（具身智能）何时到。</li>
+<li><strong>物理与数据壁垒</strong>：多依赖物理在场和写不进文字的默会手艺——决定第二波（<span class="term" tabindex="0" role="button" aria-label="术语 具身智能">具身智能<span class="term-card"><span class="term-t">具身智能</span>有身体、能在物理世界里感知并行动的AI——机器人、自动驾驶都算。它与纯比特侧AI的根本差别在于：能力只能靠真实交互一次次积累，受制于机器的数量、部署的速度和现实的不可加速。</span></span>）何时到。</li>
 <li><strong>监管与责任壁垒</strong>：法律多大程度强制要人签字、持牌、担责（医师、律师、审计、教师）——通常以十年计。</li>
 </ol>
 <p class="flush">每个行业里再分<strong>三种角色</strong>：</p>
@@ -146,14 +182,14 @@ ol li::marker{color:var(--ink);font-weight:400;}
 <li><strong>卖铲人</strong>——不赌谁赢、只赌战争规模：算力、电力、机器人供应链、行业数据管道。</li>
 </ul>
 <div class="lead">
-<p><span class="kicker">一句话护城河判据</span><br>看任何一个"收割者"，先量它与基础模型之间的距离——是<strong>一个 skill 的距离</strong>，还是<strong>一段专有数据、一张牌照、一组物理资产的距离</strong>？前者只是模型公司暂时没空收的租金，后者才是结构。<br><span class="tip">（2026 年 2 月 3 日 Anthropic 发布几个办公插件后，汤森路透单日暴跌约 16%、创历史最大单日跌幅，一周内软件板块蒸发逾 8000 亿美元——市场"开始"给这个变量定价。）</span></p>
+<p><span class="kicker">一句话<span class="term" tabindex="0" role="button" aria-label="术语 护城河">护城河<span class="term-card"><span class="term-t">护城河</span>让一门生意的利润不被竞争抹平的那个结构性障碍。本文给它一个统一的检验：量它与基础模型之间的距离——是一个skill的距离，还是一段专有数据、一张牌照、一组物理资产的距离。前者是模型公司暂时没空收取的租金，后者才是结构。</span></span>判据</span><br>看任何一个"收割者"，先量它与基础模型之间的距离——是<strong>一个 skill 的距离</strong>，还是<strong>一段专有数据、一张牌照、一组物理资产的距离</strong>？前者只是模型公司暂时没空收的租金，后者才是结构。<br><span class="tip">（2026 年 2 月 3 日 Anthropic 发布几个办公插件后，<span class="term" tabindex="0" role="button" aria-label="术语 汤森路透">汤森路透<span class="term-card"><span class="term-t">汤森路透</span>法律与专业信息服务巨头（旗下Westlaw），与RELX（LexisNexis母公司）、威科同属这一层。2026年2月它单日暴跌约16%，创历史最大单日跌幅。本文对这根K线的态度是克制的：它只证明这条逻辑进了交易员的脑子，不证明已经被定准——真正的验证在往后几个季度的毛利和续约率。</span></span>单日暴跌约 16%、创历史最大单日跌幅，一周内软件板块蒸发逾 8000 亿美元——市场"开始"给这个变量定价。）</span></p>
 </div>
-<p>连"卖铲人"也不是铁板：最热的<strong>存储</strong>周期性最凶、可能又一次均值回归；而<strong>电力、变压器</strong>这类扩不动的物理层（并网排队五年、变压器交期数年），才是真正的护城河。<strong>越靠近还能扩产的环节，溢价越像迟早被收走的租金；越靠近扩不动的物理层，溢价才像护城河。</strong></p>
+<p>连"卖铲人"也不是铁板：最热的<strong>存储</strong>周期性最凶、可能又一次均值回归；而<strong>电力、<span class="term" tabindex="0" role="button" aria-label="术语 变压器">变压器<span class="term-card"><span class="term-t">变压器</span>注意不是AI架构那个Transformer，是电网里改变电压的那种电力装置。它是当下最典型的物理瓶颈：大型变压器交期已排到四到五年，因为铁芯要用取向硅钢（GOES），而这种钢材本身也要等一到一年半，业内普遍认为2028年之前难有实质缓解。</span></span></strong>这类扩不动的物理层（<span class="term" tabindex="0" role="button" aria-label="术语 并网">并网<span class="term-card"><span class="term-t">并网</span>新建的发电或用电设施接入电网的整套审批与建设流程。美国目前排队要排到五年——这是AI最硬的一道物理约束之一：模型公司买得起电，却买不到接入电网的工期，于是只能离网自建电场。</span></span>排队五年、变压器交期数年），才是真正的护城河。<strong>越靠近还能扩产的环节，溢价越像迟早被收走的租金；越靠近扩不动的物理层，溢价才像护城河。</strong></p>
 
 <div class="final">
 <p><span class="kicker" style="color:#7fb3ff">元命题</span></p>
 <p>这是一个<strong>智能近乎免费、而现实重新变得稀缺</strong>的时代。一个 skill 就能复制的，终将只值一个 skill 的价钱；而一座要四五年才建成的晶圆厂、一种只在手上的默会手艺、一份只有亲历者才懂的真实失败，才是这场碰撞两端那点真正稀缺的东西。</p>
-<p>叙事会失灵，估值会说谎。穿透所有故事之后，只有一样东西从不说谎——<strong>物理世界给出的答案，ground truth</strong>。全文每个判断都写下了"什么数据出现，就证明它错了"。</p>
+<p>叙事会失灵，估值会说谎。穿透所有故事之后，只有一样东西从不说谎——<strong>物理世界给出的答案，<span class="term" tabindex="0" role="button" aria-label="术语 ground truth（基准真相）">ground truth<span class="term-card"><span class="term-t">ground truth（基准真相）</span>机器学习里的术语：评估一个模型时那个真实的标准答案。本文借它做罗盘——穿透一切叙事之后，物理世界给出的那个答案。</span></span></strong>。全文每个判断都写下了"什么数据出现，就证明它错了"。</p>
 </div>
 
 <p class="more"><a href="index.html">读完整论证 →</a></p>
@@ -163,5 +199,42 @@ ol li::marker{color:var(--ink);font-weight:400;}
 <!-- GoatCounter 访客统计 -->
 <script data-goatcounter="https://alzj.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
+<!--TERMCARD:JS--><script>
+(function(){
+  // 术语卡：桌面 hover 走 CSS，点击/触屏走这里（手机没有 hover，必须能点）
+  var openTerm=null;
+  function narrow(){ return matchMedia('(max-width:700px)').matches; }
+  function place(t){
+    var c=t.querySelector('.term-card'); if(!c) return;
+    c.classList.remove('up'); c.style.setProperty('--dx','0px');
+    if(narrow()) return;
+    var r=c.getBoundingClientRect(),m=12,dx=0;
+    if(r.right>innerWidth-m) dx=innerWidth-m-r.right;
+    if(r.left+dx<m) dx=m-r.left;
+    c.style.setProperty('--dx',dx+'px');
+    if(r.bottom>innerHeight-m && t.getBoundingClientRect().top>r.height+m) c.classList.add('up');
+  }
+  var openAtY=0;
+  function closeTerm(){ if(openTerm){ openTerm.classList.remove('open'); openTerm=null; document.body.classList.remove('term-open'); } }
+  document.addEventListener('click',function(e){
+    var card=e.target.closest('.term-card'); if(card) return;      // 卡片内可选中文字
+    var t=e.target.closest('.term');
+    if(!t){ closeTerm(); return; }
+    e.preventDefault();
+    if(t===openTerm){ closeTerm(); return; }
+    closeTerm(); place(t); t.classList.add('open'); openTerm=t; openAtY=scrollY;
+    document.body.classList.add('term-open');
+  });
+  document.addEventListener('mouseover',function(e){ var t=e.target.closest('.term'); if(t&&t!==openTerm&&!narrow()) place(t); });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') closeTerm();
+    if((e.key==='Enter'||e.key===' ')&&document.activeElement&&document.activeElement.classList.contains('term')){
+      e.preventDefault(); document.activeElement.click();
+    }
+  });
+  // 滚开一屏才收（小幅滚动是读者在看卡片本身，别抢在他前面关掉）
+  addEventListener('scroll',function(){ if(openTerm&&!narrow()&&Math.abs(scrollY-openAtY)>120) closeTerm(); },{passive:true});
+})();
+</script><!--/TERMCARD:JS-->
 </body>
 </html>
